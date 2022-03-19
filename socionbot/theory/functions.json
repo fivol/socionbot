@@ -1,0 +1,50 @@
+[
+  {
+    "id": "program",
+    "name": "Программная",
+    "num": 1,
+    "dims": 4
+  },
+  {
+    "id": "creative",
+    "name": "Творческая",
+    "num": 2,
+    "dims": 3
+  },
+  {
+    "id": "role",
+    "name": "Ролевая",
+    "num": 3,
+    "dims": 2
+  },
+  {
+    "id": "pain",
+    "name": "Болевая",
+    "num": 4,
+    "dims": 1
+  },
+  {
+    "id": "sugg",
+    "name": "Суггестивная",
+    "num": 5,
+    "dims": 1
+  },
+  {
+    "id": "active",
+    "name": "Активационная",
+    "num": 6,
+    "dims": 2
+  },
+  {
+    "id": "limit",
+    "name": "Ограничительная",
+    "num": 7,
+    "dims": 3
+  },
+  {
+    "id": "back",
+    "name": "Фоновая",
+    "num": 8,
+    "dims": 4
+  }
+]
