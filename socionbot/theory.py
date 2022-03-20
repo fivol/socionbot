@@ -9,7 +9,7 @@ from socionbot.theory_models import SocDichotomyValue
 from socionbot.utils import callback, callback_keys, answer, extract_value_from_callback, generate_callback_data, \
     back_to, paginate
 
-import relations  # noqa
+import socionbot.relations  # noqa
 
 
 @dp.callback_query_handler(callback('theory'))

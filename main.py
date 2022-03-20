@@ -1,14 +1,13 @@
 from aiogram import executor, types
-from aiogram.types import InlineKeyboardMarkup
 
-from constants import menu_text, help_text
+from socionbot.constants import menu_text, help_text
 
 from socionbot.bot import dp
 from socionbot.templates import to_menu_keyboard
 from socionbot.utils import callback, answer
 
-import theory  # noqa
-import testing  # noqa
+import socionbot.theory  # noqa
+import socionbot.testing  # noqa
 
 
 async def help_message(message: types.Message):
