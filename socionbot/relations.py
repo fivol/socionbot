@@ -51,7 +51,7 @@ async def relations_second_handler(cb: CallbackQuery):
 
     if not extended:
         extended_btn = InlineKeyboardButton('📊 Расширенный вид',
-                                            callback_data=generate_callback_data(first=first_type.id, extended='True'))
+                                            callback_data=generate_callback_data(first=first_type.id, extended='yes'))
     else:
         extended_btn = InlineKeyboardButton('📊 Упрощенный вид',
                                             callback_data=generate_callback_data(first=first_type.id, extended=''))

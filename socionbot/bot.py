@@ -1,8 +1,10 @@
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from bestconfig import Config
 
-API_TOKEN = '***REMOVED***'
+config = Config()
 
-bot = Bot(token=API_TOKEN)
+
+bot = Bot(token=config.BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)

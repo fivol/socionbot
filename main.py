@@ -1,4 +1,7 @@
+from typing import Union
+
 from aiogram import executor, types
+from aiogram.types import CallbackQuery, Message
 
 from socionbot.constants import menu_text, help_text
 
@@ -24,7 +27,7 @@ async def help(cb: types.CallbackQuery):
     await help_message(cb.message)
 
 
-async def to_menu(message: types.Message):
+async def to_menu(mess: Union[CallbackQuery, Message]):
     keyword = [
         [
             types.InlineKeyboardButton('🤔 Что такое соционика', callback_data='what'),
@@ -36,18 +39,18 @@ async def to_menu(message: types.Message):
         ]
     ]
 
-    await answer(message, menu_text, keyword)
+    await answer(mess, menu_text, keyword)
 
 
 @dp.callback_query_handler(callback('menu'))
 async def menu(cb: types.CallbackQuery):
-    await to_menu(cb.message)
+    await to_menu(cb)
 
 
 @dp.callback_query_handler()
 async def default(cb: types.CallbackQuery):
     print('Default callback', cb.data)
-    await to_menu(cb.message)
+    await to_menu(cb)
 
 
 @dp.message_handler()

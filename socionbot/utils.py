@@ -66,13 +66,12 @@ async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
     if isinstance(message, CallbackQuery):
         await message.answer()
         message = message.message
-    if message.text == text:
-        return
+
     if message.text == '/start':
         await message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
     elif message.from_user.id != message.bot.id:
         await message.delete()
-    else:
+    elif not (message.text.strip() == text.strip() and message.reply_markup.as_json() == keyboard.as_json()):
         await message.edit_text(text, parse_mode='Markdown', reply_markup=keyboard)
 
 

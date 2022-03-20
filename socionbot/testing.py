@@ -5,6 +5,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardButton, CallbackQuery
 
 from socionbot.bot import dp
+from socionbot.common import send_desc
 from socionbot.soc_engine import soc_engine
 from socionbot.templates import to_menu_keyboard
 from socionbot.theory_models import *
@@ -29,7 +30,6 @@ class TestModel(BaseModel):
     id: str
     name: str
     questions: List[TestQuestion]
-
 
 
 class TestManger:
@@ -87,14 +87,9 @@ class SimpleTestRunner:
         self._data.clear()
 
     def next_question(self) -> Optional[TestQuestion]:
-        result = None
         for q in self._test.questions:
             if not self._data.get(q.id):
-                result = q
-                break
-        if not result:
-            return None
-        return result
+                return q
 
     def prev_question(self) -> TestQuestion:
         return self._get_question_by_id(self._data['last'])
@@ -140,10 +135,13 @@ async def test_handler(cb: CallbackQuery, state: FSMContext):
 
         question = test_runner.next_question()
 
+        print(test.id, question_id, curr_answer, question and question.id)
+
         if not question:
             soc_type = test_runner.get_soc_type()
             test_runner.finish()
-            await answer(cb, f'Твой тип: {soc_type.name}', to_menu_keyboard)
+            cb.data = generate_callback_data(type=soc_type.id, desc=0)
+            await send_desc(cb, back_route='testing')
             return
 
         buttons = []
