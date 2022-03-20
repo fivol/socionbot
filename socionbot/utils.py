@@ -76,7 +76,7 @@ async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
         message = message.message
     log_request(f'{message.chat.id}:{message.text[:40]}')
 
-    if message.text == '/start':
+    if message.text == '/start' or message.text == '/admin':
         await message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
     elif message.from_user.id != message.bot.id:
         await message.delete()
