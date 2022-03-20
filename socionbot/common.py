@@ -44,7 +44,9 @@ async def send_desc(cb: CallbackQuery, back_route=None):
         desc_item = soc_engine.get_soc_model_desc(soc_item, desc_idx)
         desc = desc_item.text
 
-    if desc_item:
+    items = soc_engine.get_soc_model_desc_list(soc_item)
+
+    if desc_item and len(items) > 1:
         btn = desc_item.label or f'Описание {desc_idx + 1}'
         text += f'_{btn}_\n'
 
@@ -57,14 +59,15 @@ async def send_desc(cb: CallbackQuery, back_route=None):
 
     buttons = []
 
-    for i, desc_item in enumerate(soc_engine.get_soc_model_desc_list(soc_item)):
-        btn_text = desc_item.label or f'Описание {i + 1}'
-        buttons.append(
-            InlineKeyboardButton(
-                btn_text.upper() if i == desc_idx else btn_text,
-                callback_data=generate_callback_data(desc=i, **{model_name: soc_item.id})
+    if len(items) > 1:
+        for i, desc_item in enumerate(items):
+            btn_text = desc_item.label or f'Описание {i + 1}'
+            buttons.append(
+                InlineKeyboardButton(
+                    btn_text.upper() if i == desc_idx else btn_text,
+                    callback_data=generate_callback_data(desc=i, **{model_name: soc_item.id})
+                )
             )
-        )
     await answer(
         cb, text,
         keyboard=[

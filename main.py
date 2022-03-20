@@ -3,7 +3,6 @@ from typing import Union
 from aiogram import executor, types
 from aiogram.types import CallbackQuery, Message
 
-
 from socionbot.bot import dp
 from socionbot.soc_engine import soc_engine
 from socionbot.utils import callback, answer, back_to
@@ -16,10 +15,12 @@ async def to_menu(mess: Union[CallbackQuery, Message]):
     keyword = [
         [
             types.InlineKeyboardButton('🤔 Что такое соционика', callback_data='what'),
-            types.InlineKeyboardButton('🧑‍🏫 Подробный гайд', callback_data='guide'),
+            # types.InlineKeyboardButton('🧑‍🏫 Подробный гайд', callback_data='guide'),
         ],
         [
-            types.InlineKeyboardButton('📚 Справочник', callback_data='theory'),
+            types.InlineKeyboardButton('📚 Справочник', callback_data='theory')
+        ],
+        [
             types.InlineKeyboardButton('🎓 Тестирование', callback_data='testing'),
         ]
     ]
@@ -34,8 +35,18 @@ async def menu(cb: types.CallbackQuery):
 
 @dp.callback_query_handler()
 async def default(cb: types.CallbackQuery):
-    print('Default callback', cb.data)
     await to_menu(cb)
+
+
+def save_user(line):
+    with open('host/users.txt', 'a') as f:
+        f.write(line + '\n')
+
+
+@dp.message_handler(commands=['start'])
+async def default(message: types.Message):
+    save_user(f'{message.from_user.id}:{message.from_user.username}:{message.from_user.full_name}')
+    await to_menu(message)
 
 
 @dp.message_handler()

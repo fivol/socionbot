@@ -62,23 +62,32 @@ def back_to(callback_data=None, **data):
     return back
 
 
+def log_request(text):
+    text = text.replace('\n', ' ')
+    with open('host/requests.txt', 'a') as f:
+        f.write(text + '\n')
+
+
 async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
     if isinstance(keyboard, list):
         keyboard = gen_keyboard(keyboard)
     if isinstance(message, CallbackQuery):
         await message.answer()
         message = message.message
+    log_request(f'{message.chat.id}:{message.text[:40]}')
 
     if message.text == '/start':
         await message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
     elif message.from_user.id != message.bot.id:
         await message.delete()
     else:
-        if message.text.strip() == text.strip():
-            return
+        keyboard_equal = False
         if message.reply_markup and keyboard:
             if message.reply_markup.as_json() == keyboard.as_json():
-                return
+                keyboard_equal = True
+        if message.text.strip() == text.strip() and keyboard_equal:
+            return
+
         await message.edit_text(text, parse_mode='Markdown', reply_markup=keyboard)
 
 

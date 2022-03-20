@@ -114,7 +114,7 @@ async def testing_handler(cb: CallbackQuery, state: FSMContext):
         )
     keyword = [
         *batcher(buttons, 1),
-        [InlineKeyboardButton('Режим "Тестировщик"', callback_data='tester')],
+        # [InlineKeyboardButton('Режим "Тестировщик"', callback_data='tester')],
         [back_to('menu')]
     ]
     await answer(
