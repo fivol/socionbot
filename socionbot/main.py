@@ -8,6 +8,7 @@ from socionbot.templates import to_menu_keyboard
 from socionbot.utils import callback, answer
 
 import theory  # noqa
+import testing  # noqa
 
 
 async def help_message(message: types.Message):

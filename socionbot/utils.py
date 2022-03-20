@@ -1,9 +1,12 @@
 from itertools import islice
-from typing import Optional, Union
+from typing import Union
 
 from aiogram.types import Message, CallbackQuery
 
 from socionbot.templates import Buttons, gen_keyboard
+
+
+MAX_TEXT_LEN = 1000
 
 
 def callback(callback_data: str):
@@ -12,12 +15,18 @@ def callback(callback_data: str):
     return filter_func
 
 
-def callback_keys(*keys):
+def callback_keys(*keys, **optional_keys):
     def filter_func(cb):
-        return all(
-            f'{key}:' in cb.data
-            for key in keys
-        ) and len(keys) == len(cb.data.split(' '))
+        if ':' not in cb.data:
+            return False
+        data_dict = callback_data_to_dict(cb.data)
+        for key in data_dict:
+            if key not in keys and key not in optional_keys:
+                return False
+        for key in keys:
+            if key not in data_dict:
+                return False
+        return True
     return filter_func
 
 
@@ -38,8 +47,8 @@ def callback_data_to_dict(callback_data):
     }
 
 
-def extract_value_from_callback(callback_data: str, key: str):
-    return callback_data_to_dict(callback_data)[key]
+def extract_value_from_callback(callback_data: str, key: str, default=None):
+    return callback_data_to_dict(callback_data).get(key, default)
 
 
 def back_to(callback_data=None, **data):
@@ -57,6 +66,32 @@ async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
     if isinstance(message, CallbackQuery):
         await message.answer()
         message = message.message
-    if message.text != '/start':
+    if message.text == text:
+        return
+    if message.text == '/start':
+        await message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
+    elif message.from_user.id != message.bot.id:
         await message.delete()
-    await message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
+    else:
+        await message.edit_text(text, parse_mode='Markdown', reply_markup=keyboard)
+
+
+def get_page(text: str):
+    if len(text) < MAX_TEXT_LEN:
+        return text
+
+    idx = MAX_TEXT_LEN - 1
+    while idx > 1 and text[idx].isalpha():
+        idx -= 1
+
+    return text[:idx].strip().strip('.,')
+
+
+def paginate(text):
+    pages = []
+    i = 0
+    while i < len(text):
+        page = get_page(text)
+        pages.append(page)
+        text = text[len(page):]
+    return pages

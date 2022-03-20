@@ -1,9 +1,7 @@
+from enum import Enum
 from typing import Optional, List, Tuple
 
-from aiogram.types import InlineKeyboardButton, Message, InlineKeyboardMarkup, CallbackQuery
 from pydantic import BaseModel
-
-from socionbot.utils import generate_callback_data, batcher, back_to
 
 
 class SocItemDesc(BaseModel):
@@ -43,6 +41,23 @@ class SocAspect(SocModel):
     abbr: str
 
 
+class SocDichotomyValue(Enum):
+    sensor = 'сенсор'
+    intuit = 'интуит'
+    logic = 'логик'
+    etic = 'этик'
+    rac = 'рац'
+    irrac = 'иррац'
+    exter = 'экстер'
+    inter = 'интер'
+
+
+class SocDichotomyName(Enum):
+    IS = 'интуит-сенсор'
+    LE = 'логик-этик'
+    RI = 'рац-иррац'
+    IE = 'интер-экстер'
+
+
 class SocDichotomy(SocModel):
     pass
-

@@ -26,6 +26,9 @@ class ModelA:
     def where(self, aspect: str):
         return self._aspects.index(aspect) + 1
 
+    def in_two_first(self, aspect: str):
+        return self[0] == aspect or self[1] == aspect
+
     @classmethod
     def emoji_by_aspect(cls, aspect):
         _emoji_by_aspect = {
@@ -127,10 +130,17 @@ class SocEngine:
         model[8] = cls._invert_aspect(second)
         return model
 
+    @classmethod
+    def model_by_type(cls, soc_type: SocType):
+        return cls.model_by_aspects(*soc_type.model)
+
     def get_all(self, model_name: str):
         return self.theory_items[model_name].get_all_items()
 
-    def get_item(self, model_name: str, item_id: str):
+    def get_all_dichotomies(self) -> List[SocDichotomy]:
+        return self.get_all('dichotomy')
+
+    def get_item(self, model_name: str, item_id: str) -> SocModel:
         return self.theory_items[model_name].get_by_id(item_id)
 
     def get_relation_by_types(self, first: SocType, second: SocType) -> SocRelation:
@@ -145,8 +155,41 @@ class SocEngine:
     def get_type(self, type_id):
         return self.get_item('type', type_id)
 
-    def get_all_types(self):
+    def get_all_types(self) -> List[SocType]:
         return self.get_all('type')
+
+    @classmethod
+    def get_dichotomy_value(cls, model: ModelA, dichotomy: SocDichotomyName):
+        if dichotomy == SocDichotomyName.IS:
+            if model.in_two_first('БС') or model.in_two_first('ЧС'):
+                return SocDichotomyValue.sensor
+            return SocDichotomyValue.intuit
+        if dichotomy == SocDichotomyName.IE:
+            if model[1][0] == 'Ч':
+                return SocDichotomyValue.exter
+            return SocDichotomyValue.inter
+        if dichotomy == SocDichotomyName.RI:
+            if model[1][1] in 'ИС':
+                return SocDichotomyValue.irrac
+            return SocDichotomyValue.rac
+        if dichotomy == SocDichotomyName.LE:
+            if model.in_two_first('БЛ') or model.in_two_first('ЧЛ'):
+                return SocDichotomyValue.logic
+            return SocDichotomyValue.etic
+        raise ValueError
+
+    def get_type_by_dichotomies(self, d_list: List[SocDichotomyValue]) -> SocType:
+        for soc_type in self.get_all_types():
+            model_a = self.model_by_type(soc_type)
+            skip = False
+            for dichotomy in SocDichotomyName:
+                value = self.get_dichotomy_value(model_a, dichotomy)
+                if value not in d_list:
+                    skip = True
+                    break
+            if skip:
+                continue
+            return soc_type
 
 
 soc_engine = SocEngine()

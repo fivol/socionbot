@@ -3,7 +3,6 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton
 from socionbot.bot import dp
 from socionbot.common import send_buttons, send_desc
 from socionbot.soc_engine import soc_engine
-from socionbot.templates import gen_keyboard
 from socionbot.utils import callback, batcher, generate_callback_data, callback_keys, \
     extract_value_from_callback, back_to, answer
 
@@ -14,18 +13,17 @@ async def relations_first_handler(cb: CallbackQuery):
     for item in soc_engine.get_all_types():
         buttons.append(
             InlineKeyboardButton(
-                item.name,
-                callback_data=generate_callback_data(first=item.id)
+                f'{item.name}',
+                callback_data=generate_callback_data(first=item.id, extended='')
             )
         )
 
-    keyword = gen_keyboard(
-        [
-            *list(batcher(buttons, 4)),
-            [back_to('relation')]
-        ]
-    )
-    text = 'Выберите первый тип'
+    keyword = [
+        *list(batcher(buttons, 4)),
+        [InlineKeyboardButton('📖 Описание отношений', callback_data='relation')],
+        [back_to('theory')]
+    ]
+    text = '1️⃣ Выберите ПЕРВЫЙ тип 1️⃣'
     await answer(
         cb,
         text,
@@ -33,14 +31,17 @@ async def relations_first_handler(cb: CallbackQuery):
     )
 
 
-@dp.callback_query_handler(callback_keys('first'))
+@dp.callback_query_handler(callback_keys('first', 'extended'))
 async def relations_second_handler(cb: CallbackQuery):
+    extended = extract_value_from_callback(cb.data, 'extended')
     first_type = soc_engine.get_type(extract_value_from_callback(cb.data, 'first'))
 
     buttons = []
     for second_type in soc_engine.get_all_types():
         relation = soc_engine.get_relation_by_types(first_type, second_type)
-        button_text = f'{second_type.name}: {relation.name.lower()}'
+        button_text = f'{second_type.name}'
+        if extended:
+            button_text = f'{second_type.name.upper()}: {relation.name.lower()}'
         buttons.append(
             InlineKeyboardButton(
                 button_text,
@@ -48,13 +49,19 @@ async def relations_second_handler(cb: CallbackQuery):
             )
         )
 
-    keyword = gen_keyboard(
-        [
-            *list(batcher(buttons, 2)),
-            [back_to('relation')]
-        ]
-    )
-    text = 'Выберите второй тип'
+    if not extended:
+        extended_btn = InlineKeyboardButton('📊 Расширенный вид',
+                                            callback_data=generate_callback_data(first=first_type.id, extended='True'))
+    else:
+        extended_btn = InlineKeyboardButton('📊 Упрощенный вид',
+                                            callback_data=generate_callback_data(first=first_type.id, extended=''))
+
+    keyword = [
+        *list(batcher(buttons, 4 if not extended else 2)),
+        [extended_btn],
+        [back_to('relations-first')]
+    ]
+    text = '2️⃣ Выберите ВТОРОЙ тип 2️⃣'
     await answer(
         cb,
         text,
@@ -68,14 +75,13 @@ async def relation_by_types(cb: CallbackQuery):
     second_type = soc_engine.get_type(extract_value_from_callback(cb.data, 'second'))
     relation = soc_engine.get_relation_by_types(first_type, second_type)
     cb.data = generate_callback_data(desc=0, relation=relation.id)
-    await send_desc(cb)
+    await send_desc(cb, back_route=generate_callback_data(first=first_type.id, extended=''))
 
 
 @dp.callback_query_handler(callback('relation'))
 async def relations_handler(cb: CallbackQuery):
     text = """Выберите из списка интертипных отношений в соционике или найдите их по двум типам"""
-    extra_button = InlineKeyboardButton('Определить по типам', callback_data='relations-first')
-    await send_buttons(cb, text, extra_buttons=[extra_button])
+    await send_buttons(cb, text)
 
 
 @dp.callback_query_handler(callback_keys('relation', 'desc'))

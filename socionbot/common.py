@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton, CallbackQuery
 
 from socionbot.soc_engine import soc_engine
 from socionbot.utils import generate_callback_data, batcher, back_to, extract_value_from_callback, \
-    callback_data_to_dict, answer
+    callback_data_to_dict, answer, MAX_TEXT_LEN, paginate
 
 
 async def send_buttons(cb: CallbackQuery, text, extra_buttons=None, line_buttons_amount=4):
@@ -28,7 +28,7 @@ async def send_buttons(cb: CallbackQuery, text, extra_buttons=None, line_buttons
     )
 
 
-async def send_desc(cb: CallbackQuery):
+async def send_desc(cb: CallbackQuery, back_route=None):
     model_name = list(set(callback_data_to_dict(cb.data)) - {'desc'})[0]
     item_id = extract_value_from_callback(cb.data, model_name)
     desc_idx = int(extract_value_from_callback(cb.data, 'desc'))
@@ -40,11 +40,16 @@ async def send_desc(cb: CallbackQuery):
     if soc_item.desc:
         desc = soc_item.desc[desc_idx].text
 
+    if len(desc) >= MAX_TEXT_LEN:
+        cb.data = generate_callback_data(model=model_name, page=0, item=soc_item.id, desc=desc_idx)
+        await desc_page(cb)
+        return
+
     text += f'\n\n{desc}'
 
     buttons = []
 
-    for i, desc_item in enumerate(soc_item.desc[1:]):
+    for i, desc_item in enumerate(soc_item.desc):
         if i == desc_idx:
             continue
         buttons.append(
@@ -57,6 +62,44 @@ async def send_desc(cb: CallbackQuery):
         cb, text,
         keyboard=[
             *list(batcher(buttons, 3)),
-            [back_to(model_name)]
+            [back_to(back_route or model_name)]
         ]
+    )
+
+
+async def desc_page(cb: CallbackQuery):
+    desc_idx = int(extract_value_from_callback(cb.data, 'desc'))
+    model_name = extract_value_from_callback(cb.data, 'model')
+    item_id = extract_value_from_callback(cb.data, 'item')
+    page_num = int(extract_value_from_callback(cb.data, 'page'))
+    item = soc_engine.get_item(model_name, item_id)
+
+    model = soc_engine.get_item(model_name, item_id)
+    desc_elem = model.desc[desc_idx]
+    pages = paginate(desc_elem.text)
+
+    text = f'*{item.get_full_name()}*\n'
+    text += f'_{desc_elem.label}_ (стр {page_num + 1} / {len(pages)})\n\n{pages[page_num]}'
+    buttons = []
+    if page_num > 0:
+        buttons.append(
+            InlineKeyboardButton(
+                '⬅️ Предыдущая',
+                callback_data=generate_callback_data(page=page_num - 1, model=model_name, desc=desc_idx, item=item_id)
+            )
+        )
+    if page_num < len(pages) - 1:
+        buttons.append(
+            InlineKeyboardButton(
+                'Следующая ➡️️',
+                callback_data=generate_callback_data(page=page_num + 1, model=model_name, desc=desc_idx, item=item_id)
+            )
+        )
+
+    keyword = [
+        buttons,
+        [back_to(model_name)]
+    ]
+    await answer(
+        cb, text, keyboard=keyword
     )
