@@ -7,4 +7,4 @@ services:
     environment:
       BOT_TOKEN: ***REMOVED***
     volumes:
-      - host:host
+      - ./host:/app/host
