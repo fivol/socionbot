@@ -80,8 +80,7 @@ async def relation_by_types(cb: CallbackQuery):
 
 @dp.callback_query_handler(callback('relation'))
 async def relations_handler(cb: CallbackQuery):
-    text = """Выберите из списка интертипных отношений в соционике или найдите их по двум типам"""
-    await send_buttons(cb, text)
+    await send_buttons(cb, soc_engine.get_desc('relations'))
 
 
 @dp.callback_query_handler(callback_keys('relation', 'desc'))

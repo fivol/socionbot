@@ -3,9 +3,9 @@ from typing import Union
 from aiogram import executor, types
 from aiogram.types import CallbackQuery, Message
 
-from socionbot.constants import menu_text, help_text
 
 from socionbot.bot import dp
+from socionbot.soc_engine import soc_engine
 from socionbot.templates import to_menu_keyboard
 from socionbot.utils import callback, answer
 
@@ -14,7 +14,7 @@ import socionbot.testing  # noqa
 
 
 async def help_message(message: types.Message):
-    await answer(message, help_text, to_menu_keyboard)
+    await answer(message, soc_engine.get_desc('help'), to_menu_keyboard)
 
 
 @dp.message_handler(commands=['help'])
@@ -39,7 +39,7 @@ async def to_menu(mess: Union[CallbackQuery, Message]):
         ]
     ]
 
-    await answer(mess, menu_text, keyword)
+    await answer(mess, soc_engine.get_desc('menu'), keyword)
 
 
 @dp.callback_query_handler(callback('menu'))

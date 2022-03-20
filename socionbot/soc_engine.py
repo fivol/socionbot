@@ -52,6 +52,11 @@ class ModelA:
         return text
 
 
+def read_file(file_name: str):
+    with open(f'{THEORY_PATH}/{file_name}.json', 'r') as f:
+        return json.loads(f.read())
+
+
 class SocTheoryFileAdapter:
     def __init__(self, file_name: str, model: type(SocModel)):
         self.file_name = file_name
@@ -60,16 +65,11 @@ class SocTheoryFileAdapter:
 
     def parse_file(self):
         items = {}
-        file_items = self.read_file(self.file_name)
+        file_items = read_file(self.file_name)
         for item in file_items:
             items[item['id']] = self.model.parse_obj(item)
         assert len(file_items) == len(items), 'Have repeat "id" in the same file'
         return items
-
-    @classmethod
-    def read_file(cls, file_name: str):
-        with open(f'{THEORY_PATH}/{file_name}.json', 'r') as f:
-            return json.loads(f.read())
 
     def get_by_id(self, name: str) -> SocModel:
         return self.items[name]
@@ -85,15 +85,40 @@ class SocEngine:
         self.relations = SocTheoryFileAdapter('relations', SocRelation)
         self.aspects = SocTheoryFileAdapter('aspects', SocAspect)
         self.dichotomies = SocTheoryFileAdapter('dichotomies', SocDichotomy)
+        self.quadras = SocTheoryFileAdapter('quadras', SocDichotomy)
+        self.desc_file = read_file('desc')
+        self._desc_settings = self._read_desc_settings()
         self.theory_items = {
             'type': self.types,
             'aspect': self.aspects,
             'relation': self.relations,
             'func': self.functions,
-            'dichotomy': self.dichotomies
+            'dichotomy': self.dichotomies,
+            'quad': self.quadras
         }
         self._relation_by_overlay: Dict[Tuple[int, int], SocRelation] = {}
         self._calculate_relation_by_overlay_map()
+
+    @classmethod
+    def _read_desc_settings(cls) -> Dict[str, dict]:
+        return {
+            item['id']: item for item in read_file('desc_settings')
+        }
+
+    def get_soc_model_desc(self, model: SocModel, desc_idx: int) -> SocItemDesc:
+        desc_item = model.desc[desc_idx]
+        template = self._desc_settings.get(desc_item.id)
+        if template:
+            if 'label' in template and not desc_item.label:
+                desc_item.label = template['label']
+
+        return desc_item
+
+    def get_soc_model_desc_list(self, model: SocModel) -> List[SocItemDesc]:
+        items = []
+        for i, desc_item in enumerate(model.desc):
+            items.append(self.get_soc_model_desc(model, i))
+        return items
 
     def _calculate_relation_by_overlay_map(self):
         for relation in self.get_all('relation'):
@@ -157,6 +182,9 @@ class SocEngine:
 
     def get_all_types(self) -> List[SocType]:
         return self.get_all('type')
+
+    def get_desc(self, name: str) -> str:
+        return self.desc_file[name]
 
     @classmethod
     def get_dichotomy_value(cls, model: ModelA, dichotomy: SocDichotomyName):

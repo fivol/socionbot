@@ -7,6 +7,7 @@ from socionbot.templates import Buttons, gen_keyboard
 
 
 MAX_TEXT_LEN = 1000
+EXTRA_SIZE_LIMIT = 200
 
 
 def callback(callback_data: str):
@@ -76,21 +77,23 @@ async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
 
 
 def get_page(text: str):
-    if len(text) < MAX_TEXT_LEN:
+    if len(text) < MAX_TEXT_LEN + EXTRA_SIZE_LIMIT:
         return text
 
     idx = MAX_TEXT_LEN - 1
-    while idx > 1 and text[idx].isalpha():
+    while idx > 1 and text[idx] != ' ':
         idx -= 1
 
-    return text[:idx].strip().strip('.,')
+    while idx < len(text) and text[idx] in '.!,':
+        idx += 1
+
+    return text[:idx]
 
 
 def paginate(text):
     pages = []
-    i = 0
-    while i < len(text):
+    while text:
         page = get_page(text)
-        pages.append(page)
         text = text[len(page):]
+        pages.append(page.strip())
     return pages

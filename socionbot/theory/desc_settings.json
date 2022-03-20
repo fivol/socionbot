@@ -1,0 +1,26 @@
+[
+  {
+    "id": "bojko-long",
+    "label": "Подробно"
+  },
+  {
+    "id": "bojko-short",
+    "label": "Кратко"
+  },
+  {
+    "id": "bojko-behaviour",
+    "label": "Поведение"
+  },
+  {
+    "id": "bojko-appearance",
+    "label": "Внешность"
+  },
+  {
+    "id": "prilka-short",
+    "label": "Базовое"
+  },
+  {
+    "id": "prilka-long",
+    "label": "По функциям"
+  }
+]

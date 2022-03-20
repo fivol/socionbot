@@ -1,7 +1,6 @@
 from aiogram.types import CallbackQuery, InlineKeyboardButton
 
 from socionbot.common import send_buttons, send_desc, desc_page
-from socionbot.constants import what_is_socion
 from socionbot.bot import dp
 from socionbot.soc_engine import soc_engine
 from socionbot.templates import to_menu_keyboard, Buttons, gen_keyboard
@@ -23,6 +22,9 @@ async def theory(cb: CallbackQuery):
             [
                 InlineKeyboardButton('📦 Функции', callback_data='func'),
                 InlineKeyboardButton('☘️ Аспекты', callback_data='aspect'),
+            ],
+            [
+                InlineKeyboardButton('🧭 Квадры', callback_data='quad'),
                 InlineKeyboardButton('☑️ Дихотомии', callback_data=generate_callback_data(d=0, d_list='')),
             ],
             [
@@ -30,8 +32,8 @@ async def theory(cb: CallbackQuery):
             ]
         ]
     )
-    text = 'Просматривайте описание ТИМ-ов, функций, аспектов, ' \
-           'отношений и дихотомий в удобном интерактивном формате'
+    text = soc_engine.get_desc('types')
+    text += '\n\n' + soc_engine.get_desc('desc_disclaimer')
     await answer(
         cb,
         text,
@@ -43,7 +45,7 @@ async def theory(cb: CallbackQuery):
 async def what_is(cb: CallbackQuery):
     await answer(
         cb,
-        what_is_socion,
+        soc_engine.get_desc('what_is_socionics'),
         to_menu_keyboard
     )
 
@@ -62,11 +64,22 @@ async def dichotomy_handler(cb: CallbackQuery):
 @dp.callback_query_handler(callback('func'))
 async def funcs_handler(cb: CallbackQuery):
     text = 'Что-то про функции'
-    await send_buttons(cb, text)
+    await send_buttons(cb, text, line_buttons_amount=2)
 
 
 @dp.callback_query_handler(callback_keys('func', 'desc'))
 async def func_handler(cb: CallbackQuery):
+    await send_desc(cb)
+
+
+@dp.callback_query_handler(callback('quad'))
+async def quad_handler(cb: CallbackQuery):
+    text = 'Что-то про квадры'
+    await send_buttons(cb, text)
+
+
+@dp.callback_query_handler(callback_keys('quad', 'desc'))
+async def quad_handler(cb: CallbackQuery):
     await send_desc(cb)
 
 

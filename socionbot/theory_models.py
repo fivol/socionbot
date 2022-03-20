@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 
 class SocItemDesc(BaseModel):
+    id: Optional[str]
     text: str
     label: Optional[str]
 
@@ -20,8 +21,12 @@ class SocModel(BaseModel):
 
 
 class SocType(SocModel):
-    alias: Optional[str]
+    alias: str
+    mbti: str
     model: List[str]
+
+    def get_full_name(self):
+        return f'{super().get_full_name()} ({self.alias}, {self.mbti})'
 
 
 class SocRelation(SocModel):

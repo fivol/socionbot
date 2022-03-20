@@ -135,8 +135,6 @@ async def test_handler(cb: CallbackQuery, state: FSMContext):
 
         question = test_runner.next_question()
 
-        print(test.id, question_id, curr_answer, question and question.id)
-
         if not question:
             soc_type = test_runner.get_soc_type()
             test_runner.finish()
