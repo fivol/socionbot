@@ -7,12 +7,11 @@ from aiogram.types import InlineKeyboardButton, CallbackQuery
 from socionbot.bot import dp
 from socionbot.common import send_desc
 from socionbot.soc_engine import soc_engine
-from socionbot.templates import to_menu_keyboard
 from socionbot.theory_models import *
 from socionbot.utils import callback, answer, batcher, back_to, generate_callback_data, callback_keys, \
-    extract_value_from_callback
+    extract_value_from_callback, read_file
 
-TESTS_PATH = 'socionbot/testing/testing.json'
+TESTS_PATH = 'socionbot/testing'
 
 
 class TestAnswer(BaseModel):
@@ -44,18 +43,21 @@ class TestManger:
 
     @classmethod
     def parse_test_file(cls):
-        return [TestModel.parse_obj(test) for test in cls.read_file()]
-
-    @classmethod
-    def read_file(cls):
-        with open(TESTS_PATH, 'r') as f:
-            return json.loads(f.read())
+        return [TestModel.parse_obj(test) for test in read_file(f'{TESTS_PATH}/testing.json')]
 
     def get_test_by_id(self, test_id: str) -> TestModel:
         return self._tests_by_id[test_id]
 
     def get_all_tests(self):
         return self._testing_data
+
+
+class TesterModeRunner:
+    def __init__(self):
+        self._questions = read_file(f'{TESTS_PATH}/questions.json')
+
+    def get_questions(self):
+        return [item['text'] for item in self._questions]
 
 
 tests_manager = TestManger()
@@ -112,6 +114,7 @@ async def testing_handler(cb: CallbackQuery, state: FSMContext):
         )
     keyword = [
         *batcher(buttons, 1),
+        [InlineKeyboardButton('Режим "Тестировщик"', callback_data='tester')],
         [back_to('menu')]
     ]
     await answer(
@@ -166,3 +169,17 @@ async def test_handler(cb: CallbackQuery, state: FSMContext):
             [InlineKeyboardButton('↙️ Выйти из теста', callback_data='testing')]
         )
         await answer(cb, question.text, keyword)
+
+
+@dp.callback_query_handler(callback('tester'))
+async def tester_handler(cb: CallbackQuery):
+    keyword = [
+        [InlineKeyboardButton('Список вопросов')],
+        [back_to('testing')]
+    ]
+    await answer(cb, 'текст', keyboard=keyword)
+
+
+@dp.callback_query_handler(callback('questions'))
+async def tester_handler(cb: CallbackQuery):
+    pass

@@ -1,8 +1,7 @@
-import json
-from typing import Dict, Tuple
+from typing import Dict
 
 from socionbot.theory_models import *
-
+from socionbot.utils import read_file
 
 THEORY_PATH = 'socionbot/theory'
 
@@ -52,11 +51,6 @@ class ModelA:
         return text
 
 
-def read_file(file_name: str):
-    with open(f'{THEORY_PATH}/{file_name}.json', 'r') as f:
-        return json.loads(f.read())
-
-
 class SocTheoryFileAdapter:
     def __init__(self, file_name: str, model: type(SocModel)):
         self.file_name = file_name
@@ -65,7 +59,7 @@ class SocTheoryFileAdapter:
 
     def parse_file(self):
         items = {}
-        file_items = read_file(self.file_name)
+        file_items = read_file(f'{THEORY_PATH}/{self.file_name}.json')
         for item in file_items:
             items[item['id']] = self.model.parse_obj(item)
         assert len(file_items) == len(items), 'Have repeat "id" in the same file'
@@ -86,7 +80,7 @@ class SocEngine:
         self.aspects = SocTheoryFileAdapter('aspects', SocAspect)
         self.dichotomies = SocTheoryFileAdapter('dichotomies', SocDichotomy)
         self.quadras = SocTheoryFileAdapter('quadras', SocDichotomy)
-        self.desc_file = read_file('desc')
+        self.desc_file = read_file(f'{THEORY_PATH}/desc.json')
         self._desc_settings = self._read_desc_settings()
         self.theory_items = {
             'type': self.types,
@@ -102,7 +96,7 @@ class SocEngine:
     @classmethod
     def _read_desc_settings(cls) -> Dict[str, dict]:
         return {
-            item['id']: item for item in read_file('desc_settings')
+            item['id']: item for item in read_file(f'{THEORY_PATH}/desc_settings.json')
         }
 
     def get_soc_model_desc(self, model: SocModel, desc_idx: int) -> SocItemDesc:

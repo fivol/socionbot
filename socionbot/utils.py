@@ -1,3 +1,4 @@
+import json
 from itertools import islice
 from typing import Union
 
@@ -102,3 +103,8 @@ def paginate(text):
         text = text[len(page):]
         pages.append(page.strip())
     return pages
+
+
+def read_file(file_name: str):
+    with open(file_name, 'r') as f:
+        return json.loads(f.read())
