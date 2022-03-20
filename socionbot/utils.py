@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery
 from socionbot.templates import Buttons, gen_keyboard
 
 
-MAX_TEXT_LEN = 1000
+MAX_TEXT_LEN = 700
 EXTRA_SIZE_LIMIT = 200
 
 
@@ -72,7 +72,12 @@ async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
         await message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
     elif message.from_user.id != message.bot.id:
         await message.delete()
-    elif not (message.text.strip() == text.strip() and message.reply_markup.as_json() == keyboard.as_json()):
+    else:
+        if message.text.strip() == text.strip():
+            return
+        if message.reply_markup and keyboard:
+            if message.reply_markup.as_json() == keyboard.as_json():
+                return
         await message.edit_text(text, parse_mode='Markdown', reply_markup=keyboard)
 
 

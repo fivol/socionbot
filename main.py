@@ -6,25 +6,10 @@ from aiogram.types import CallbackQuery, Message
 
 from socionbot.bot import dp
 from socionbot.soc_engine import soc_engine
-from socionbot.templates import to_menu_keyboard
-from socionbot.utils import callback, answer
+from socionbot.utils import callback, answer, back_to
 
 import socionbot.theory  # noqa
 import socionbot.testing  # noqa
-
-
-async def help_message(message: types.Message):
-    await answer(message, soc_engine.get_desc('help'), to_menu_keyboard)
-
-
-@dp.message_handler(commands=['help'])
-async def help(message: types.Message):
-    await help_message(message)
-
-
-@dp.callback_query_handler(callback('help'))
-async def help(cb: types.CallbackQuery):
-    await help_message(cb.message)
 
 
 async def to_menu(mess: Union[CallbackQuery, Message]):

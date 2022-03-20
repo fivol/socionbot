@@ -46,7 +46,7 @@ async def what_is(cb: CallbackQuery):
     await answer(
         cb,
         soc_engine.get_desc('what_is_socionics'),
-        to_menu_keyboard
+        [[back_to('menu')]]
     )
 
 
@@ -74,8 +74,7 @@ async def func_handler(cb: CallbackQuery):
 
 @dp.callback_query_handler(callback('quad'))
 async def quad_handler(cb: CallbackQuery):
-    text = 'Что-то про квадры'
-    await send_buttons(cb, text)
+    await send_buttons(cb, soc_engine.get_desc('quad'))
 
 
 @dp.callback_query_handler(callback_keys('quad', 'desc'))

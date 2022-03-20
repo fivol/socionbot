@@ -1,3 +1,5 @@
+from typing import Optional
+
 from aiogram.types import InlineKeyboardButton, CallbackQuery
 
 from socionbot.soc_engine import soc_engine
@@ -37,12 +39,18 @@ async def send_desc(cb: CallbackQuery, back_route=None):
     text += f'*{soc_item.get_full_name()}*\n'
 
     desc = 'Coming soon...'
+    desc_item = None
     if soc_item.desc:
-        desc = soc_engine.get_soc_model_desc(soc_item, desc_idx).text
+        desc_item = soc_engine.get_soc_model_desc(soc_item, desc_idx)
+        desc = desc_item.text
+
+    if desc_item:
+        btn = desc_item.label or f'Описание {desc_idx + 1}'
+        text += f'_{btn}_\n'
 
     if len(desc) > MAX_TEXT_LEN + EXTRA_SIZE_LIMIT:
         cb.data = generate_callback_data(model=model_name, page=0, item=soc_item.id, desc=desc_idx)
-        await desc_page(cb)
+        await desc_page(cb, back_route=model_name if not desc_idx else None)
         return
 
     text += f'\n{desc}'
@@ -50,11 +58,10 @@ async def send_desc(cb: CallbackQuery, back_route=None):
     buttons = []
 
     for i, desc_item in enumerate(soc_engine.get_soc_model_desc_list(soc_item)):
-        if i == desc_idx:
-            continue
+        btn_text = desc_item.label or f'Описание {i + 1}'
         buttons.append(
             InlineKeyboardButton(
-                desc_item.label or f'Описание {i + 1}',
+                btn_text.upper() if i == desc_idx else btn_text,
                 callback_data=generate_callback_data(desc=i, **{model_name: soc_item.id})
             )
         )
@@ -67,7 +74,7 @@ async def send_desc(cb: CallbackQuery, back_route=None):
     )
 
 
-async def desc_page(cb: CallbackQuery):
+async def desc_page(cb: CallbackQuery, back_route: Optional[str] = None):
     desc_idx = int(extract_value_from_callback(cb.data, 'desc'))
     model_name = extract_value_from_callback(cb.data, 'model')
     item_id = extract_value_from_callback(cb.data, 'item')
@@ -105,7 +112,7 @@ async def desc_page(cb: CallbackQuery):
 
     keyword = [
         buttons,
-        [back_to(**{model_name: item.id, 'desc': 0})]
+        [back_to(back_route) if back_route else back_to(**{model_name: item.id, 'desc': 0})]
     ]
     await answer(
         cb, text, keyboard=keyword

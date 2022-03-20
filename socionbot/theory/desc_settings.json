@@ -22,5 +22,14 @@
   {
     "id": "prilka-long",
     "label": "По функциям"
+  },
+  {
+    "url": "https://socionika.info/aspects.html",
+    "id": "socionika.info",
+    "label": "Базовое"
+  },
+  {
+    "id": "socioniks.net",
+    "label": "Подробно"
   }
 ]
