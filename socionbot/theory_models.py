@@ -16,6 +16,9 @@ class SocModel(BaseModel):
     full_name: Optional[str]
     desc: List[SocItemDesc] = []
 
+    def __hash__(self):
+        return hash(self.id)
+
     def get_full_name(self):
         return self.full_name or self.name
 

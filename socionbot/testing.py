@@ -92,15 +92,74 @@ class TesterModeRunner:
                 self._data['aspects'] = {}
             self._data['aspects'][vote] = self._data['aspects'].get(vote, 0) + 1
 
-    def _fit_type_score(self, soc_typ: SocType):
-        pass
+    @classmethod
+    def normalize_dict(cls, items: dict):
+        values_sum = sum(items.values()) or 1
+        return {
+            key: value / values_sum
+            for key, value in items.items()
+        }
 
-    def calculate_types_percents(self) -> List[Tuple[SocType, int]]:
-        return [
-            (soc_engine.get_type('Дюма'), 61),
-            (soc_engine.get_type('Габен'), 20),
-            (soc_engine.get_type('Джек'), 19)
+    @classmethod
+    def _fit_type_score(cls, soc_type: SocType,
+                        aspects: Dict[str, int],
+                        dichotomies: Dict[SocDichotomyValue, int]) -> float:
+
+        aspects = cls.normalize_dict(aspects)
+        dichotomies = cls.normalize_dict(dichotomies)
+        model_a = soc_engine.model_by_type(soc_type)
+        model_ds = []
+
+        aspect_weight = {
+            model_a[1]: 8,
+            model_a[2]: 6,
+            model_a[3]: 1,
+            model_a[4]: 0,
+            model_a[5]: 3,
+            model_a[6]: 3,
+            model_a[7]: 1,
+            model_a[8]: 2,
+        }
+        aspect_weight = cls.normalize_dict(aspect_weight)
+
+        for d_name in SocDichotomyName:
+            model_ds.append(soc_engine.get_dichotomy_value(model_a, d_name))
+
+        aspect_score = 0
+        for aspect, amount in aspects.items():
+            aspect_score += aspect_weight[aspect] * amount
+
+        d_score = 0
+        for d in model_ds:
+            d_score += dichotomies.get(d, 0)
+
+        return d_score + aspect_score
+
+    def have_results(self):
+        return sum(self._data.get('dichotomies', {}).values()) + sum(self._data.get('aspects', {}).values()) > 3
+
+    def calculate_types_percents(self) -> List[Tuple[SocType, float]]:
+        aspects = self._data.get('aspects', {})
+        dichotomies = self._data.get('dichotomies', {})
+        dichotomies = {
+            SocDichotomyValue(item): count
+            for item, count in dichotomies.items()
+        }
+        types_score: Dict[SocType, float] = {}
+        for soc_type in soc_engine.get_all_types():
+            score = self._fit_type_score(soc_type, aspects, dichotomies)
+            types_score[soc_type] = score
+
+        types_score = {
+            item: value / 2
+            for item, value in types_score.items()
+        }
+        result = [
+            (item, score * 100)
+            for item, score in
+            types_score.items() if score > 0
         ]
+        return sorted(result, key=lambda x: -x[1])
 
 
 tests_manager = TestManger()
@@ -247,9 +306,10 @@ async def tester_handler(cb: CallbackQuery, state: FSMContext):
                         text += f'{key}: {value}\n'
 
         if res:
-            types_percents = runner.calculate_types_percents()
-            for i, (soc_type, percent) in enumerate(types_percents):
-                text += f'{i + 1}. {soc_type.name}: {percent}%\n'
+            types_percents = runner.calculate_types_percents()[:5]
+            if types_percents:
+                for i, (soc_type, percent) in enumerate(types_percents):
+                    text += f'{i + 1}. {soc_type.name}: {round(percent, 1)}%\n'
 
         buttons = []
         for aspect in soc_engine.get_all_aspects():
@@ -280,14 +340,15 @@ async def tester_handler(cb: CallbackQuery, state: FSMContext):
                 InlineKeyboardButton('Скрыть вопросы', callback_data=generate_callback_data(vote='', all_q=''))
             )
 
-        if not res:
-            control_buttons.append(
-                InlineKeyboardButton('Результаты', callback_data=generate_callback_data(res='yes', vote=''))
-            )
-        else:
-            control_buttons.append(
-                InlineKeyboardButton('Скрыть результаты', callback_data=generate_callback_data(res='', vote=''))
-            )
+        if runner.have_results():
+            if not res:
+                control_buttons.append(
+                    InlineKeyboardButton('Результаты', callback_data=generate_callback_data(res='yes', vote=''))
+                )
+            else:
+                control_buttons.append(
+                    InlineKeyboardButton('Скрыть результаты', callback_data=generate_callback_data(res='', vote=''))
+                )
 
         keyword = [
             *batcher(buttons, 4),
