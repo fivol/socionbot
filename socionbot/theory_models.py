@@ -44,6 +44,7 @@ class SocAspect(SocModel):
     БИ - белая интуиция
     """
     abbr: str
+    emoji: Optional[str]
 
 
 class SocDichotomyValue(Enum):

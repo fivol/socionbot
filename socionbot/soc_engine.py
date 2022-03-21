@@ -156,6 +156,9 @@ class SocEngine:
     def get_all(self, model_name: str):
         return self.theory_items[model_name].get_all_items()
 
+    def get_all_aspects(self) -> List[SocAspect]:
+        return self.get_all('aspect')
+
     def get_all_dichotomies(self) -> List[SocDichotomy]:
         return self.get_all('dichotomy')
 

@@ -1,5 +1,5 @@
 import json
-from typing import Dict
+from typing import Dict, Union
 
 from aiogram.dispatcher import FSMContext
 from aiogram.types import InlineKeyboardButton, CallbackQuery
@@ -53,11 +53,54 @@ class TestManger:
 
 
 class TesterModeRunner:
-    def __init__(self):
+    def __init__(self, data: dict):
+        self._data = data
         self._questions = read_file(f'{TESTS_PATH}/questions.json')
 
     def get_questions(self):
         return [item['text'] for item in self._questions]
+
+    def get_current_question(self) -> (str, int, int):
+        if self._data.get('question_idx') is None:
+            self._data['question_idx'] = 0
+        question_idx = self._data['question_idx']
+        return self.get_questions()[question_idx], question_idx, len(self.get_questions())
+
+    def next_question(self):
+        self._data['question_idx'] = (self._data.get('question_idx', 0) + 1) % len(self.get_questions())
+
+    def get_counters(self) -> List[Tuple[str, int]]:
+        counters = [
+            (key, value)
+            for key, value in
+            self._data.get('aspects', {}).items()
+        ]
+        counters += [
+            (key, value)
+            for key, value in
+            self._data.get('dichotomies', {}).items()
+        ]
+        return sorted(counters, key=lambda x: -x[1])
+
+    def add_vote(self, vote: Union[SocDichotomyValue, str]):
+        if isinstance(vote, SocDichotomyValue):
+            if not self._data.get('dichotomies'):
+                self._data['dichotomies'] = {}
+            self._data['dichotomies'][vote.value] = self._data['dichotomies'].get(vote.value, 0) + 1
+        else:
+            if not self._data.get('aspects'):
+                self._data['aspects'] = {}
+            self._data['aspects'][vote] = self._data['aspects'].get(vote, 0) + 1
+
+    def _fit_type_score(self, soc_typ: SocType):
+        pass
+
+    def calculate_types_percents(self) -> List[Tuple[SocType, int]]:
+        return [
+            (soc_engine.get_type('Дюма'), 61),
+            (soc_engine.get_type('Габен'), 20),
+            (soc_engine.get_type('Джек'), 19)
+        ]
 
 
 tests_manager = TestManger()
@@ -114,7 +157,7 @@ async def testing_handler(cb: CallbackQuery, state: FSMContext):
         )
     keyword = [
         *batcher(buttons, 1),
-        # [InlineKeyboardButton('Режим "Тестировщик"', callback_data='tester')],
+        [InlineKeyboardButton('Режим "Тестировщик"', callback_data=generate_callback_data(vote='', q='yes'))],
         [back_to('menu')]
     ]
     await answer(
@@ -171,15 +214,84 @@ async def test_handler(cb: CallbackQuery, state: FSMContext):
         await answer(cb, question.text, keyword)
 
 
-@dp.callback_query_handler(callback('tester'))
-async def tester_handler(cb: CallbackQuery):
-    keyword = [
-        [InlineKeyboardButton('Список вопросов')],
-        [back_to('testing')]
-    ]
-    await answer(cb, 'текст', keyboard=keyword)
+@dp.callback_query_handler(callback_keys(vote=None, q=None, all_q=None, res=None))
+async def tester_handler(cb: CallbackQuery, state: FSMContext):
+    vote = extract_value_from_callback(cb.data, 'vote')
+    q = extract_value_from_callback(cb.data, 'q')
+    all_q = extract_value_from_callback(cb.data, 'all_q')
+    res = extract_value_from_callback(cb.data, 'res')
+    async with state.proxy() as data:
+        runner = TesterModeRunner(data)
+        if vote:
+            try:
+                runner.add_vote(SocDichotomyValue[vote])
+            except:
+                runner.add_vote(vote)
+        text = soc_engine.get_desc('tester') + '\n\n'
 
+        if q:
+            runner.next_question()
 
-@dp.callback_query_handler(callback('questions'))
-async def tester_handler(cb: CallbackQuery):
-    pass
+        if all_q:
+            questions = runner.get_questions()
+            for q_ in questions:
+                text += f'{q_}\n'
+        else:
+            question, curr, count = runner.get_current_question()
+            text += f'({curr + 1}/{count}) {question}\n\n'
+
+            if not res:
+                counters = runner.get_counters()
+                if counters:
+                    for key, value in counters:
+                        text += f'{key}: {value}\n'
+
+        if res:
+            types_percents = runner.calculate_types_percents()
+            for i, (soc_type, percent) in enumerate(types_percents):
+                text += f'{i + 1}. {soc_type.name}: {percent}%\n'
+
+        buttons = []
+        for aspect in soc_engine.get_all_aspects():
+            buttons.append(
+                InlineKeyboardButton(
+                    f'{aspect.emoji} {aspect.abbr}',
+                    callback_data=generate_callback_data(vote=aspect.id)
+                )
+            )
+
+        for dichotomy_value in SocDichotomyValue:
+            buttons.append(
+                InlineKeyboardButton(
+                    dichotomy_value.value,
+                    callback_data=generate_callback_data(vote=dichotomy_value.name)
+                )
+            )
+
+        control_buttons = [
+            InlineKeyboardButton('Следующий вопрос', callback_data=generate_callback_data(vote='', q='yes'))
+        ]
+        if not all_q:
+            control_buttons.append(
+                InlineKeyboardButton('Все вопросы', callback_data=generate_callback_data(vote='', all_q='yes'))
+            )
+        else:
+            control_buttons.append(
+                InlineKeyboardButton('Скрыть вопросы', callback_data=generate_callback_data(vote='', all_q=''))
+            )
+
+        if not res:
+            control_buttons.append(
+                InlineKeyboardButton('Результаты', callback_data=generate_callback_data(res='yes', vote=''))
+            )
+        else:
+            control_buttons.append(
+                InlineKeyboardButton('Скрыть результаты', callback_data=generate_callback_data(res='', vote=''))
+            )
+
+        keyword = [
+            *batcher(buttons, 4),
+            control_buttons,
+            [back_to('testing')]
+        ]
+        await answer(cb, text, keyboard=keyword)
