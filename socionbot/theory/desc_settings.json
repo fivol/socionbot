@@ -1,7 +1,8 @@
 [
   {
     "id": "bojko-long",
-    "label": "Подробно"
+    "label": "Подробно",
+    "url": "https://www.andrewbozhko.com/16-sociotipov"
   },
   {
     "id": "bojko-short",
@@ -9,11 +10,13 @@
   },
   {
     "id": "bojko-behaviour",
-    "label": "Поведение"
+    "label": "Поведение",
+    "url": "https://www.andrewbozhko.com/16-sociotipov"
   },
   {
     "id": "bojko-appearance",
-    "label": "Внешность"
+    "label": "Внешность",
+    "url": "https://www.andrewbozhko.com/16-sociotipov"
   },
   {
     "id": "prilka-short",
@@ -30,6 +33,12 @@
   },
   {
     "id": "socioniks.net",
-    "label": "Подробно"
+    "label": "Подробно",
+    "url": "https://socioniks.net/sociotype/"
+  },
+  {
+    "id": "soc2",
+    "label": "По признакам",
+    "url": "http://www.modernsocionics.ru/types"
   }
 ]

@@ -102,6 +102,17 @@ def get_page(text: str):
     while idx < len(text) and text[idx] in '.!,':
         idx += 1
 
+    if text[:idx].count('\n') > 1:
+        next_idx = idx
+        while next_idx < len(text) and text[next_idx] != '\n':
+            next_idx += 1
+        if next_idx < MAX_TEXT_LEN + EXTRA_SIZE_LIMIT:
+            return text[:next_idx]
+        else:
+            while next_idx > MAX_TEXT_LEN - EXTRA_SIZE_LIMIT and text[next_idx] != '\n':
+                next_idx -= 1
+            return text[:next_idx]
+
     return text[:idx]
 
 

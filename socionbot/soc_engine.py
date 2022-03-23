@@ -1,3 +1,4 @@
+import re
 from typing import Dict
 
 from socionbot.theory_models import *
@@ -102,9 +103,18 @@ class SocEngine:
     def get_soc_model_desc(self, model: SocModel, desc_idx: int) -> SocItemDesc:
         desc_item = model.desc[desc_idx]
         template = self._desc_settings.get(desc_item.id)
+        desc_item.text = desc_item.text.strip()
+
+        def highlight(item):
+            return item.group(0).replace(item.group(1), f'*{item.group(1)}*')
+
+        desc_item.text = re.sub(r'\n([\w ]{1,30}) [—-]', highlight, desc_item.text)
+        desc_item.text = re.sub(r'^([\w ]{1,30}) [—-]', highlight, desc_item.text)
         if template:
             if 'label' in template and not desc_item.label:
                 desc_item.label = template['label']
+                if template.get('url'):
+                    desc_item.text += f'\n\n_Источник: {template["url"]}_'
 
         return desc_item
 

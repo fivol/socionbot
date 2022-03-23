@@ -22,14 +22,22 @@ class SocModel(BaseModel):
     def get_full_name(self):
         return self.full_name or self.name
 
+    def get_additional_name(self):
+        return None
+
 
 class SocType(SocModel):
     alias: str
     mbti: str
+    abbr: str
+    abbr_full: str
     model: List[str]
 
     def get_full_name(self):
-        return f'{super().get_full_name()} ({self.alias}, {self.mbti})'
+        return f'{super().get_full_name()} ({self.alias}, {self.abbr}, {self.mbti})'
+
+    def get_additional_name(self):
+        return f'{self.abbr_full}'
 
 
 class SocRelation(SocModel):

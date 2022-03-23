@@ -14,14 +14,14 @@ import socionbot.testing  # noqa
 async def to_menu(mess: Union[CallbackQuery, Message]):
     keyword = [
         [
-            types.InlineKeyboardButton('🤔 Что такое соционика', callback_data='what'),
-            # types.InlineKeyboardButton('🧑‍🏫 Подробный гайд', callback_data='guide'),
-        ],
-        [
             types.InlineKeyboardButton('📚 Справочник', callback_data='theory')
         ],
         [
             types.InlineKeyboardButton('🎓 Тестирование', callback_data='testing'),
+            # types.InlineKeyboardButton('🧑‍🏫 Подробный гайд', callback_data='guide'),
+        ],
+        [
+            types.InlineKeyboardButton('🤔 Что такое соционика', callback_data='what'),
         ]
     ]
 

@@ -37,6 +37,8 @@ async def send_desc(cb: CallbackQuery, back_route=None):
     soc_item = soc_engine.get_item(model_name, item_id)
     text = ''
     text += f'*{soc_item.get_full_name()}*\n'
+    if soc_item.get_additional_name():
+        text += f'{soc_item.get_additional_name()}\n'
 
     desc = 'Coming soon...'
     desc_item = None
@@ -89,6 +91,8 @@ async def desc_page(cb: CallbackQuery, back_route: Optional[str] = None):
     pages = paginate(desc_elem.text)
 
     text = f'*{item.get_full_name()}*\n'
+    if item.get_additional_name():
+        text += f'{item.get_additional_name()}\n'
     text += f'_{desc_elem.label}_ (стр {page_num + 1} / {len(pages)})\n\n{pages[page_num]}'
     buttons = []
     if page_num > 0:

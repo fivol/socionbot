@@ -21,8 +21,8 @@ class TestAnswer(BaseModel):
 
 class TestQuestion(BaseModel):
     text: str
-    answers: List[TestAnswer]
-    id: str
+    answers: List[TestAnswer] = []
+    id: Optional[str]
 
 
 class TestModel(BaseModel):
@@ -211,9 +211,10 @@ async def testing_handler(cb: CallbackQuery, state: FSMContext):
     text = 'Выберите один из тестов на определения ТИМ-а, или запустите режим "Я Тестировщик"'
     buttons = []
     for test in tests_manager.get_all_tests():
-        buttons.append(
-            InlineKeyboardButton(test.name, callback_data=generate_callback_data(test=test.id))
-        )
+        if test.id == 'test1':
+            buttons.append(
+                InlineKeyboardButton(test.name, callback_data=generate_callback_data(test=test.id))
+            )
     keyword = [
         *batcher(buttons, 1),
         [InlineKeyboardButton('Режим "Тестировщик"', callback_data=generate_callback_data(vote='', q=''))],
