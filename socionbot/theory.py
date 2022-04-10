@@ -25,7 +25,7 @@ async def theory(cb: CallbackQuery):
             ],
             [
                 InlineKeyboardButton('🧭 Квадры', callback_data='quad'),
-                InlineKeyboardButton('☑️ Дихотомии', callback_data=generate_callback_data(d=0, d_list='')),
+                InlineKeyboardButton('☑️ Дихотомии', callback_data='dichotomy'),
             ],
             [
                 Buttons.menu
@@ -52,8 +52,8 @@ async def what_is(cb: CallbackQuery):
 
 @dp.callback_query_handler(callback('dichotomy'))
 async def dichotomies_handler(cb: CallbackQuery):
-    text = 'Что-то про дихотомии'
-    await send_buttons(cb, text, line_buttons_amount=2)
+    button = InlineKeyboardButton("Тип по дихотомиям", callback_data=generate_callback_data(d=0, d_list=''))
+    await send_buttons(cb, soc_engine.get_desc('dichotomies'), line_buttons_amount=2, extra_buttons=[button])
 
 
 @dp.callback_query_handler(callback_keys('dichotomy', 'desc'))
@@ -63,8 +63,7 @@ async def dichotomy_handler(cb: CallbackQuery):
 
 @dp.callback_query_handler(callback('func'))
 async def funcs_handler(cb: CallbackQuery):
-    text = 'Что-то про функции'
-    await send_buttons(cb, text, line_buttons_amount=2)
+    await send_buttons(cb, soc_engine.get_desc("about-funcs"), line_buttons_amount=2)
 
 
 @dp.callback_query_handler(callback_keys('func', 'desc'))
@@ -135,7 +134,7 @@ async def soc_dichotomy(cb: CallbackQuery):
     keyword = [
         buttons,
         [InlineKeyboardButton('📖 Описание дихотомий', callback_data='dichotomy')],
-        [back_to('theory')]
+        [back_to('dichotomy')]
     ]
     text = f'Выберете среди дихотомий чтобы определить соционический тип: {first} / {second}'
     await answer(

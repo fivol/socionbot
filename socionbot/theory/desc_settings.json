@@ -40,5 +40,13 @@
     "id": "soc2",
     "label": "По признакам",
     "url": "http://www.modernsocionics.ru/types"
+  },
+  {
+    "id": "short",
+    "label": "Кратко"
+  },
+  {
+    "id": "long",
+    "label": "Подробнее"
   }
 ]
