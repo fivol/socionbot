@@ -8,6 +8,7 @@ class SocItemDesc(BaseModel):
     id: Optional[str]
     text: str
     label: Optional[str]
+    url: Optional[str]
 
 
 class SocModel(BaseModel):

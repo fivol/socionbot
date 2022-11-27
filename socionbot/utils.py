@@ -3,9 +3,10 @@ from itertools import islice
 from typing import Union
 
 from aiogram.types import Message, CallbackQuery
+from aiogram.utils.exceptions import MessageNotModified
+from loguru import logger
 
 from socionbot.templates import Buttons, gen_keyboard
-
 
 MAX_TEXT_LEN = 700
 EXTRA_SIZE_LIMIT = 200
@@ -14,6 +15,7 @@ EXTRA_SIZE_LIMIT = 200
 def callback(callback_data: str):
     def filter_func(cb):
         return cb.data == callback_data
+
     return filter_func
 
 
@@ -29,6 +31,7 @@ def callback_keys(*keys, **optional_keys):
             if key not in data_dict:
                 return False
         return True
+
     return filter_func
 
 
@@ -77,7 +80,7 @@ async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
     log_request(f'{message.chat.id}:{message.text[:40]}')
 
     if message.text == '/start' or message.text == '/admin':
-        await message.answer(text, reply_markup=keyboard, parse_mode='Markdown')
+        await message.answer(text, reply_markup=keyboard, parse_mode='Markdown', disable_web_page_preview=True)
     elif message.from_user.id != message.bot.id:
         await message.delete()
     else:
@@ -87,8 +90,10 @@ async def answer(message: Union[Message, CallbackQuery], text, keyboard=None):
                 keyboard_equal = True
         if message.text.strip() == text.strip() and keyboard_equal:
             return
-
-        await message.edit_text(text, parse_mode='Markdown', reply_markup=keyboard)
+        try:
+            await message.edit_text(text, parse_mode='Markdown', reply_markup=keyboard, disable_web_page_preview=True)
+        except MessageNotModified:
+            logger.warning("MessageNotModified")
 
 
 def get_page(text: str):
@@ -102,16 +107,17 @@ def get_page(text: str):
     while idx < len(text) and text[idx] in '.!,':
         idx += 1
 
-    if text[:idx].count('\n') > 1:
-        next_idx = idx
-        while next_idx < len(text) and text[next_idx] != '\n':
-            next_idx += 1
-        if next_idx < MAX_TEXT_LEN + EXTRA_SIZE_LIMIT:
-            return text[:next_idx]
-        else:
-            while next_idx > MAX_TEXT_LEN - EXTRA_SIZE_LIMIT and text[next_idx] != '\n':
-                next_idx -= 1
-            return text[:next_idx]
+    # TODO Think about transfer with paragraths
+    # if text[:idx].count('\n') > 1:
+    #     next_idx = idx
+    #     while next_idx < len(text) and text[next_idx] != '\n':
+    #         next_idx += 1
+    #     if next_idx < MAX_TEXT_LEN + EXTRA_SIZE_LIMIT:
+    #         return text[:next_idx]
+    #     else:
+    #         while next_idx > MAX_TEXT_LEN - EXTRA_SIZE_LIMIT and text[next_idx - 1] != '\n':
+    #             next_idx -= 1
+    #         return text[:next_idx]
 
     return text[:idx]
 

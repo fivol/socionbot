@@ -35,16 +35,18 @@ async def send_desc(cb: CallbackQuery, back_route=None):
     item_id = extract_value_from_callback(cb.data, model_name)
     desc_idx = int(extract_value_from_callback(cb.data, 'desc'))
     soc_item = soc_engine.get_item(model_name, item_id)
-    text = ''
-    text += f'*{soc_item.get_full_name()}*\n'
-    if soc_item.get_additional_name():
-        text += f'{soc_item.get_additional_name()}\n'
 
     desc = 'Coming soon...'
     desc_item = None
     if soc_item.desc:
         desc_item = soc_engine.get_soc_model_desc(soc_item, desc_idx)
         desc = desc_item.text
+
+    text = ''
+
+    text += f'*{soc_item.get_full_name()}*\n'
+    if soc_item.get_additional_name():
+        text += f'{soc_item.get_additional_name()}\n'
 
     items = soc_engine.get_soc_model_desc_list(soc_item)
 
@@ -58,6 +60,9 @@ async def send_desc(cb: CallbackQuery, back_route=None):
         return
 
     text += f'\n{desc}'
+
+    if desc_item and desc_item.url:
+        text += f'\n[Источник]({desc_item.url})'
 
     buttons = []
 
@@ -94,6 +99,8 @@ async def desc_page(cb: CallbackQuery, back_route: Optional[str] = None):
     if item.get_additional_name():
         text += f'{item.get_additional_name()}\n'
     text += f'_{desc_elem.label}_ (стр {page_num + 1} / {len(pages)})\n\n{pages[page_num]}'
+    if desc_elem.url:
+        text += f'\n[Источник]({desc_elem.url})'
     buttons = []
     if page_num > 0:
         buttons.append(

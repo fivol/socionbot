@@ -113,8 +113,7 @@ class SocEngine:
         if template:
             if 'label' in template and not desc_item.label:
                 desc_item.label = template['label']
-                if template.get('url') and len(desc_item.text) > MAX_TEXT_LEN + EXTRA_SIZE_LIMIT:
-                    desc_item.text += f'\n\n_Источник: {template["url"]}_'
+            desc_item.url = template.get('url')
 
         return desc_item
 
